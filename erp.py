@@ -3,8 +3,10 @@
 """
 EAPO Reproduction Script
 ========================
-Reproduces the Emissions-Aware Robust Portfolio Optimization (EAPO) results and figures
-as developed in the manuscript and this conversation.
+Reproduces the Emissions-Aware Robust Portfolio Optimization (ERP) results and figures
+
+Author: Khizar Qureshi
+Date: 2025-08-26
 
 Inputs (expected in the current working directory):
     - CLEAN_PRICES.csv            : Daily adjusted-close prices with columns [Date, <tickers...>]
@@ -38,6 +40,9 @@ import os, sys, io, json, textwrap
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+__author__ = 'kqureshi'
+__date__ = '20250826'
 
 plt.rcParams['figure.dpi'] = 160
 
