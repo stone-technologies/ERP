@@ -1,40 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-EAPO Reproduction Script
-========================
-Reproduces the Emissions-Aware Robust Portfolio Optimization (ERP) results and figures
+Reproduces the Emissions-Aware Robust Portfolio Optimization (EAPO) results and figures
 
-Author: Khizar Qureshi
-Date: 2025-08-26
-
-Inputs (expected in the current working directory):
+Inputs:
     - CLEAN_PRICES.csv            : Daily adjusted-close prices with columns [Date, <tickers...>]
     - CLEAN_EMISSIONS.csv         : Annual emissions with columns [YEAR, TICKER, SCOPE_1] (scope-1 absolute)
     - stock_revenues_imputed.csv  : Annual revenues with columns [YEAR, <tickers...>] (USD millions)
+
 Outputs:
     - Figures:
-        R2_cum_wealth.png
-        R2_intensity_monthly.png
-        R2_pareto_frontier.png
-        R2_pareto_bubble.png
-        R2_theta_wealth_nocap.png
-        R2_theta_intensity_nocap.png
-        R2_theta_tradeoff_nocap.png
-        R2_theta_wealth_tau.png
-        R2_theta_intensity_tau.png
-        R2_theta_tradeoff_tau.png
-        R2_rolling_sharpe.png
-        R2_drawdowns.png
-        R2_hist_eapo_minus_ew.png
-        R2_intensity_weighted_cdf.png
-        R2_turnover_series.png
-    - Tables (CSV):
-        R2_summary_with_theta.csv
-        R2_pareto_frontier_points.csv
-        R2_theta_sweep_no_turnover.csv
-        R2_theta_sweep_with_turnover.csv
-        R2_newey_west.csv
+        R2_{variations}.png
+    - Tables:
+        R2_{variations}.csv
 """
 import os, sys, io, json, textwrap
 import numpy as np
@@ -42,13 +20,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 __author__ = 'kqureshi'
-__date__ = '20250826'
 
 plt.rcParams['figure.dpi'] = 160
 
-# ------------------------------------------------------------
-# Utilities
-# ------------------------------------------------------------
 def project_to_simplex(v: np.ndarray) -> np.ndarray:
     """Euclidean projection of v onto the probability simplex."""
     v = np.asarray(v, float)
@@ -98,9 +72,6 @@ def savefig(path: str):
     plt.savefig(path)
     plt.close()
 
-# ------------------------------------------------------------
-# Core EAPO primitives
-# ------------------------------------------------------------
 def build_panels(prices_csv='CLEAN_PRICES.csv',
                  emissions_csv='CLEAN_EMISSIONS.csv',
                  revenues_csv='stock_revenues_imputed.csv',
@@ -164,9 +135,7 @@ def inv_var_weights(var: np.ndarray) -> np.ndarray:
     s = iv.sum()
     return iv/s if s>0 else np.ones_like(iv)/len(iv)
 
-# ------------------------------------------------------------
-# Backtest engines
-# ------------------------------------------------------------
+
 def run_baseline(R, L, e1, years_range, lookback=252, Gamma=3.5, theta=0.5, cost_rate=0.0002):
     month_ends = R.groupby(pd.Grouper(freq='M')).apply(lambda df: df.index[-1]).values
     ret_series, int_series, weights_ts, turnovers = {}, {}, {}, {}
@@ -305,9 +274,7 @@ def run_eapo_theta(R, L, theta, lookback=252, Gamma=3.5, tau=None, cost_rate=0.0
     M['Avg_TC per Rebalance (bps)'] = 10000.0*cost_rate*M['Avg_Turnover (L1)'] if M['Avg_Turnover (L1)']==M['Avg_Turnover (L1)'] else np.nan
     return serR, serI, serT, W, pd.Series(M)
 
-# ------------------------------------------------------------
-# Plotting bundle
-# ------------------------------------------------------------
+
 def plot_all(ret_series, int_series, theta_results_no, theta_results_tau, pareto_df,
              weights_ts, turnovers_tau, outdir='.'):
     os.makedirs(outdir, exist_ok=True)
@@ -428,9 +395,6 @@ def plot_all(ret_series, int_series, theta_results_no, theta_results_tau, pareto
     plt.title("Turnover per Monthly Rebalance — EAPO θ=0.5 (τ=0.20)"); plt.xlabel("Date"); plt.ylabel("L1 Turnover")
     savefig(os.path.join(outdir, "R2_turnover_series.png"))
 
-# ------------------------------------------------------------
-# Main
-# ------------------------------------------------------------
 def main():
     # Load panels
     R, L, e1, years_range = build_panels()
